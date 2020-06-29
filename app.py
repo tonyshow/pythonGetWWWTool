@@ -14,6 +14,9 @@ import threading
 import json
 import urllib.request as ur
 
+#解析html里面的所有连接 https://www.cnblogs.com/chengxuyuanaa/p/12986320.html
+from bs4 import BeautifulSoup
+
 # https://www.cnblogs.com/ppwang06/p/12469157.html
 from urllib.parse import urlparse
 
@@ -104,15 +107,44 @@ def pairData(_data):
     |(?<=src=\").+?(?=\")|(?<=src=\').+?(?=\')\
     |(?<=href=\").+?(?=\")\
     |(?<=exports=\").+?(?=\")"
-    , _data)
+    , _data,re.M)
     for s in link_list:  
         doDownLoad(s)  
- 
+def pairHtml(_data):
+    soup=BeautifulSoup(_data)
+    # link
+    link=[] 
+    links=soup.find_all("link",href=True)
+    for links in links:
+        url=links.get("href")
+        print(url)
+
+    # script 
+    script=[]
+    scripts=soup.select('script',src=True)
+    for links in scripts:
+        url=links.get("src")
+        if(url!=None):
+            print(url)
+
+
+def startUp(url,fullFileLocalPath,fName):
+    print("启动下载:{}".format(url))
+    r = requests.get(url)
+    if( fullFileLocalPath=="" ): 
+        urlJData=urlparse(url)
+        if( urlJData.path.find('.')>=0 ):
+            pairData(r.text) 
+        else:
+            pairHtml(r.text) 
+    else:
+        with open(fullFileLocalPath, "wb") as code:
+            code.write(r.content) 
+            downloadFinsh(fName,fullFileLocalPath,r.text) 
 def doDownLoad(fullUrl):
     if fullUrl.find("http")<=-1 :
         print("非法url={}".format(fullUrl))
         return
- 
     # 去掉域名
     # ParseResult(scheme='https', netloc='ww.baidu.com', path='/index.html/index.html', params='', query='', fragment='') 
     urlJData=urlparse(fullUrl)
@@ -141,13 +173,14 @@ def doDownLoad(fullUrl):
 
     fullFileLocalPath = os.path.join(fullPath,fName)
     isFile = os.path.exists(fullFileLocalPath) 
-    if( False == isFile ): 
-        print("启动下载:{}".format(fullUrl))
-        r = requests.get(fullUrl)
-        with open(fullFileLocalPath, "wb") as code:
-            code.write(r.content) 
-            downloadFinsh(fName,fullFileLocalPath,r.text)
- 
+    if( False == isFile ):
+        startUp(fullUrl,fullFileLocalPath,fName) 
+        # print("启动下载:{}".format(fullUrl))
+        # r = requests.get(fullUrl)
+        # with open(fullFileLocalPath, "wb") as code:
+        #     code.write(r.content) 
+        #     downloadFinsh(fName,fullFileLocalPath,r.text)
+
 def doOneFile(_path):
     fPath= os.path.join( currPathFull, _path)
     fPath=os.path.abspath(fPath); 
@@ -158,7 +191,11 @@ def doFullFile(fPath,fInfo):
         idxInfo=fInfo
     else: 
         idxInfo = readFile(fPath) 
-    pairData(idxInfo) 
+
+    if( fPath.find('.html')>=0 ):
+        pairHtml(idxInfo) 
+    else:
+        pairData(idxInfo)
 def main(): 
     ctermPath = os.path.abspath(os.path.join(currPathFull,'./client'))  
     if  os.path.exists(ctermPath):  
@@ -169,5 +206,5 @@ def main():
         global cfg 
         cfg = json.load(fp) 
         for s in cfg["needDownLoadFiles"]["value"]:
-            doDownLoad(s)   
+            startUp(s,"","")    
 main()
