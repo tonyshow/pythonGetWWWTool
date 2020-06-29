@@ -1,0 +1,13 @@
+{
+    "needDownLoadFiles":
+    {
+        "note": "直接下载的文件相当下载启动",
+        "value": [
+            "https://www.xx.com.html" ]
+    },
+    "noNeedCheckFileTypes":
+    {
+        "note": "递归检查下载是忽略文件类型",
+        "value": [".png", ".jpg", ".gif"]
+    }
+}
