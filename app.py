@@ -15,6 +15,8 @@ import json
 import urllib.request as ur
 
 #解析html里面的所有连接 https://www.cnblogs.com/chengxuyuanaa/p/12986320.html
+# pip3 install beautifulsoup4
+# pip3 install lxml
 from bs4 import BeautifulSoup
 
 # https://www.cnblogs.com/ppwang06/p/12469157.html
@@ -111,7 +113,7 @@ def pairData(_data):
     for s in link_list:  
         doDownLoad(s)  
 def pairHtml(_data):
-    soup=BeautifulSoup(_data)
+    soup=BeautifulSoup(_data,"lxml")
     # link
     link=[] 
     links=soup.find_all("link",href=True)
